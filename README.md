@@ -5,7 +5,7 @@
     pip install torch==1.7.1
 
 ### 运行
-    
+
 在根目录下运行
 
     python scripts/slu_baseline.py
@@ -15,6 +15,7 @@
 + `utils/args.py`:定义了所有涉及到的可选参数，如需改动某一参数可以在运行的时候将命令修改成
         
         python scripts/slu_baseline.py --<arg> <value>
+    
     其中，`<arg>`为要修改的参数名，`<value>`为修改后的值
 + `utils/initialization.py`:初始化系统设置，包括设置随机种子和显卡/CPU
 + `utils/vocab.py`:构建编码输入输出的词表
@@ -41,3 +42,18 @@
   + 强力的NLP工具库: https://stanfordnlp.github.io/stanza/
 + jieba
   + 中文分词工具: https://github.com/fxsjy/jieba
+
+## 服务器使用
+
+为避免计算资源浪费，教学账号限制作业运行数量1个、核数10个、GPU卡数1卡、最长运行时间24小时。请务必提醒学生不要在登录节点运行作业，否则将会被封禁。教学支撑gpu队列为dgx2（单卡拥有32G显存）。目前集群GPU资源紧张，可能会出现排队的现象，请学生妥善安排作业提交时间。
+
+-   集群状态查询：https://status.hpc.sjtu.edu.cn/
+
+###相关文档：
+
+-   登录：https://docs.hpc.sjtu.edu.cn/login/index.html
+-   作业提交：https://docs.hpc.sjtu.edu.cn/job/index.html
+-   pytorch：https://docs.hpc.sjtu.edu.cn/app/ai/pytorch.html
+
+-   账号：stu763
+-   密码：c1cVPI1SfY3E
