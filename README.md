@@ -28,7 +28,8 @@ python scripts/slu_main.py
     ```bash
 	python scripts/slu_main.py  --use_elmo
 	```
--   可以同时使用预训练模型和 crf
+-   可以同时使用预训练模型和 crf。
+-   可以通过将软件包中：elmoformanylangs/elmo.py 中第95、96行注释减少无意义的info输出
 
 ### 运行Dual BiLSTM 相关代码：
 
