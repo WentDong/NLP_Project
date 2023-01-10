@@ -7,12 +7,12 @@ from utils.evaluator import Evaluator
 class Example():
 
     @classmethod
-    def configuration(cls, root, train_path=None, word2vec_path=None):
+    def configuration(cls, root, train_path=None, word2vec_path=None, filter = False):
         cls.evaluator = Evaluator()
         cls.word_vocab = Vocab(padding=True, unk=True, filepath=train_path)
         cls.word2vec = Word2vecUtils(word2vec_path)
         cls.label_vocab = LabelVocab(root)
-
+        cls.filter = filter
     @classmethod
     def load_dataset(cls, data_path):
         dataset = json.load(open(data_path, 'r'))
@@ -29,6 +29,15 @@ class Example():
         self.did = did
 
         self.utt = ex['asr_1best']
+
+        if Example.filter:
+            alphabet = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z',
+            'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z', ' ']
+            def in_alpha(x):
+                return not x in alphabet
+            # print(self.utt, type(self.utt))
+            self.utt = "".join(filter(in_alpha , self.utt))
+            # print(self.utt)
         self.slot = {}
         for label in ex['semantic']:
             act_slot = f'{label[0]}-{label[1]}'

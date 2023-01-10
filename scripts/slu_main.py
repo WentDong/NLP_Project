@@ -5,14 +5,12 @@ from torch.optim import Adam
 install_path = os.path.abspath(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(install_path)
 
-
 from utils.args import init_args
 from utils.initialization import *
-from utils.example import Example
 from utils.batch import from_example_list
 from utils.vocab import PAD
-from model.slu_dual_tagging import SLUTagging
-
+from utils.example import Example
+from tqdm import *
 # initialization params, output path, logger, random seed and torch.device
 args = init_args(sys.argv[1:])
 set_random_seed(args.seed)
@@ -20,27 +18,34 @@ device = set_torch_device(args.device)
 print("Initialization finished ...")
 print("Random seed is set to %d" % (args.seed))
 print("Use GPU with index %s" % (args.device) if args.device >= 0 else "Use CPU as target torch device")
+args.device = device
+
+if args.algo == "Baseline":
+    from model.slu_baseline_tagging import SLUTagging
+else:
+    from model.slu_dual_tagging import SLUTagging
 
 
 start_time = time.time()
 train_path = os.path.join(args.dataroot, 'train.json')
 dev_path = os.path.join(args.dataroot, 'development.json')
-Example.configuration(args.dataroot, train_path=train_path, word2vec_path=args.word2vec_path)
+Example.configuration(args.dataroot, train_path=train_path, word2vec_path=args.word2vec_path, filter = args.alpha_filter)
 train_dataset = Example.load_dataset(train_path)
 dev_dataset = Example.load_dataset(dev_path)
 print("Load dataset and database finished, cost %.4fs ..." % (time.time() - start_time))
 print("Dataset size: train -> %d ; dev -> %d" % (len(train_dataset), len(dev_dataset)))
-# pdb.set_trace()
-
 
 args.vocab_size = Example.word_vocab.vocab_size
 args.pad_idx = Example.word_vocab[PAD]
 args.num_tags = Example.label_vocab.num_tags
 args.tag_pad_idx = Example.label_vocab.convert_tag_to_idx(PAD)
-args.elmo_model = "./zhs.model/"
-args.embed_size = 1024
-args.device = device
+
+if args.use_elmo or args.algo=="Dual":
+    args.embed_size = 1024
+
 model = SLUTagging(args).to(device)
+if not args.use_bert and not args.use_elmo and args.algo == "Baseline":
+    Example.word2vec.load_embeddings(model.embed.embed, Example.word_vocab, device=device)
 
 if args.testing:
     check_point = torch.load(open('model.bin', 'rb'), map_location=device)
@@ -114,7 +119,8 @@ if not args.testing:
         np.random.shuffle(train_index)
         model.train()
         count = 0
-        for j in range(0, nsamples, step_size):
+        loop = tqdm(range(0, nsamples, step_size), desc=f'Epoch [{i}/{args.max_epoch}]')
+        for j in loop:
             cur_dataset = [train_dataset[k] for k in train_index[j: j + step_size]]
             current_batch = from_example_list(args, cur_dataset, device, train=True)
             output, loss = model(current_batch)
@@ -123,6 +129,8 @@ if not args.testing:
             optimizer.step()
             optimizer.zero_grad()
             count += 1
+            loop.set_postfix(loss= loss.item())
+            
         print('Training: \tEpoch: %d\tTime: %.4f\tTraining Loss: %.4f' % (i, time.time() - start_time, epoch_loss / count))
         torch.cuda.empty_cache()
         gc.collect()

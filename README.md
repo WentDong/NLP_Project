@@ -3,18 +3,49 @@
     conda create -n slu python=3.6
     source activate slu
     pip install torch==1.7.1
+    ...
 
 ### 运行
 
 在根目录下运行
 
-    python scripts/slu_baseline.py
+```bash
+python scripts/slu_main.py
+```
+
+### 运行 Baseline (BiLSTM) 相关代码：
+
+-   使用预训练模型 roberta:
+	```bash
+	python scripts/slu_main.py  --use_bert --alpha_filter
+	```
+	
+-   使用CRF:
+    ```bash
+	python scripts/slu_main.py  --use_crf
+	```
+-   使用ELMo:
+    ```bash
+	python scripts/slu_main.py  --use_elmo
+	```
+-   可以同时使用预训练模型和 crf
+
+### 运行Dual BiLSTM 相关代码：
+
+```bash
+ python scripts/slu_main.py  --algo Dual --rate_head 0.8 --rate_mid 0.6 --use_dict 
+```
+
+-   可以同时运行crf。
 
 ### 代码说明
 
 + `utils/args.py`:定义了所有涉及到的可选参数，如需改动某一参数可以在运行的时候将命令修改成
         
-        python scripts/slu_baseline.py --<arg> <value>
+  
+    ```bash
+    python scripts/slu_baseline.py --<arg> <value>
+    ```
     
     其中，`<arg>`为要修改的参数名，`<value>`为修改后的值
 + `utils/initialization.py`:初始化系统设置，包括设置随机种子和显卡/CPU

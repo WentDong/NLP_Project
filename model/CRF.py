@@ -28,18 +28,20 @@ class CRF(nn.Module):
         """
         Args:
             target_size: int, target size
-            use_cuda: bool, 是否使用gpu, default is True
+            device: str, "cpu", "cuda:0", et.al
             average_batch: bool, loss是否作平均, default is True
         """
         super(CRF, self).__init__()
         for k in kwargs:
             self.__setattr__(k, kwargs[k])
+        print(self.device)
         self.START_TAG_IDX, self.END_TAG_IDX = -2, -1
         init_transitions = torch.zeros(self.target_size+2, self.target_size+2)
         init_transitions[:, self.START_TAG_IDX] = -1000.
         init_transitions[self.END_TAG_IDX, :] = -1000.
-        if self.use_cuda:
-            init_transitions = init_transitions.cuda()
+        # if self.use_cuda:
+        #     init_transitions = init_transitions.cuda()
+        init_transitions = init_transitions.to(self.device)
         self.transitions = nn.Parameter(init_transitions)
 
     def _forward_alg(self, feats, mask=None):
@@ -141,8 +143,7 @@ class CRF(nn.Module):
             self.transitions.view(1, tag_size, tag_size).expand(batch_size, tag_size, tag_size)
         _, last_bp = torch.max(last_values, 1)
         pad_zero = Variable(torch.zeros(batch_size, tag_size)).long()
-        if self.use_cuda:
-            pad_zero = pad_zero.cuda()
+        pad_zero = pad_zero.to(self.device)
         back_points.append(pad_zero)
         back_points = torch.cat(back_points).view(seq_len, batch_size, tag_size)
 
@@ -155,8 +156,7 @@ class CRF(nn.Module):
         back_points = back_points.transpose(1, 0).contiguous()
 
         decode_idx = Variable(torch.LongTensor(seq_len, batch_size))
-        if self.use_cuda:
-            decode_idx = decode_idx.cuda()
+        decode_idx = decode_idx.to(self.device)
         decode_idx[-1] = pointer.data
         for idx in range(len(back_points)-2, -1, -1):
             pointer = torch.gather(back_points[idx], 1, pointer.contiguous().view(batch_size, 1))
@@ -183,8 +183,7 @@ class CRF(nn.Module):
         tag_size = scores.size(-1)
 
         new_tags = Variable(torch.LongTensor(batch_size, seq_len))
-        if self.use_cuda:
-            new_tags = new_tags.cuda()
+        new_tags = new_tags.to(self.device)
         for idx in range(seq_len):
             if idx == 0:
                 new_tags[:, 0] = (tag_size - 2) * tag_size + tags[:, 0]

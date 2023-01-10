@@ -3,9 +3,10 @@ import torch
 import torch.nn as nn
 import torch.nn.utils.rnn as rnn_utils
 from model.slu_baseline_tagging import TaggingFNNDecoder
-from elmoformanylangs import Embedder
-from model.Word_Adaper import Word_Adapter
+# from model.Word_Adaper import Word_Adapter
 import jieba
+
+from model.embed import ELMoEmb
 def Feat_Merge(out_word, Batch_splits, out_char, device, rate_head = 0.88, rate_mid = 0.7):
     feat_B = torch.zeros_like(out_char).to(device)
     for i,split in enumerate(Batch_splits):
@@ -23,15 +24,26 @@ class SLUTagging(nn.Module):
         super(SLUTagging, self).__init__()
         self.config = config
         self.cell = config.encoder_cell
-        self.embed = Embedder(config.elmo_model)
+
+        self.embed = ELMoEmb(config)
+        
         self.rnn_char = getattr(nn, self.cell)(config.embed_size, config.hidden_size // 2, num_layers=config.num_layer, bidirectional=True, batch_first=True)
         self.rnn_word = getattr(nn, self.cell)(config.embed_size, config.hidden_size // 2, num_layers=config.num_layer, bidirectional=True, batch_first=True)
-        self.adapter = Word_Adapter(input_dim=config.hidden_size)
+        # self.adapter = Word_Adapter(input_dim=config.hidden_size) Don't Work!
         self.dropout_layer = nn.Dropout(p=config.dropout)
-        self.output_layer = TaggingFNNDecoder(config.hidden_size, config.num_tags, config.tag_pad_idx)
-        jieba.load_userdict("./data/lexicon/poi_name.txt")
-        jieba.load_userdict("./data/lexicon/ordinal_number.txt")
-        jieba.load_userdict("./data/lexicon/operation_verb.txt")    
+        
+        if config.use_dict:
+            for x in config.dict_dir_list:
+                jieba.load_userdict(x)
+                
+        if (config.use_crf):
+            args_crf = dict({'target_size': config.num_tags, "device": config.device, "average_batch": True})
+            from model.CRF import CRF
+            self.crf = CRF(**args_crf)
+            self.output_layer = nn.Linear(config.hidden_size, config.num_tags+2)
+        else:
+            self.output_layer = TaggingFNNDecoder(config.hidden_size, config.num_tags, config.tag_pad_idx)
+
     def forward(self, batch):
         tag_ids = batch.tag_ids
         tag_mask = batch.tag_mask
@@ -39,22 +51,19 @@ class SLUTagging(nn.Module):
         lengths_char = batch.lengths # B x len
         seglist = [jieba.lcut(str, cut_all=False) for str in input]
         Batch_split = []
+        lengths_word = []
         for seg in seglist:
             split = []
             for str in seg:
                 split.append(len(str))
             Batch_split.append(split)
-        char_emb = self.embed.sents2elmo(input)
-        # print(lengths_char)
-        # print(len(char_emb))
-        # print(char_emb)
-        word_emb = self.embed.sents2elmo(seglist)
-        lengths_word = [word.shape[0] for word in word_emb] # B (number of words)
+            lengths_word.append(len(seg))
+
         mx_char = max(lengths_char)
+        char_emb = self.embed(input, mx_char)
+
         mx_word = max(lengths_word)
-        # print(mx_char)
-        char_emb = torch.stack([nn.functional.pad(torch.tensor(emb), pad=(0,0,0,mx_char - len(emb)), value = 0) for emb in char_emb]).to(self.config.device)
-        word_emb = torch.stack([nn.functional.pad(torch.tensor(emb), pad=(0,0,0,mx_word - len(emb)), value = 0) for emb in word_emb]).to(self.config.device)
+        word_emb = self.embed(seglist, mx_word)
 
         packed_inputs_char = rnn_utils.pack_padded_sequence(char_emb, lengths_char, batch_first=True, enforce_sorted=False)
         packed_inputs_word = rnn_utils.pack_padded_sequence(word_emb, lengths_word, batch_first=True, enforce_sorted=False)
@@ -65,15 +74,24 @@ class SLUTagging(nn.Module):
         rnn_out_char, _ = rnn_utils.pad_packed_sequence(packed_rnn_outs_char, batch_first=True)
         rnn_out_word, _ = rnn_utils.pad_packed_sequence(packed_rnn_outs_word, batch_first=True)
 
-        rnn_out = Feat_Merge(rnn_out_word, Batch_split, rnn_out_char, self.config.device)
-        # print(rnn_out_char.shape)
-        # print(rnn_out_word_repeat.shape)
-        # rnn_out = self.adapter(rnn_out_char, rnn_out_word_repeat)
-        # rnn_out = rnn_out_word_repeat + rnn_out_char
+        rnn_out = Feat_Merge(rnn_out_word, Batch_split, rnn_out_char, self.config.device, self.config.rate_head, self.config.rate_mid)
+        
+        # rnn_out = self.adapter(rnn_out_char, rnn_out_word_repeat) # Not Work
+        
         hiddens = self.dropout_layer(rnn_out)
-        tag_output = self.output_layer(hiddens, tag_mask, tag_ids)
 
-        return tag_output
+        if self.config.use_crf:
+            tag_output = self.output_layer(hiddens)
+            if tag_ids == None:
+                _, best_path = self.crf(tag_output, tag_mask)
+                return (best_path,)
+            else:
+                _, best_path = self.crf(tag_output, tag_mask)
+                loss = self.crf.neg_log_likelihood_loss(tag_output, tag_mask.bool(), tag_ids)
+                return (best_path, loss)
+        else:
+            tag_output = self.output_layer(hiddens, tag_mask, tag_ids)
+            return tag_output
 
     def decode(self, label_vocab, batch):
         batch_size = len(batch)
@@ -82,10 +100,16 @@ class SLUTagging(nn.Module):
         prob = output[0]
         predictions = []
         for i in range(batch_size):
-            pred = torch.argmax(prob[i], dim=-1).cpu().tolist()
-            pred_tuple = []
-            idx_buff, tag_buff, pred_tags = [], [], []
-            pred = pred[:len(batch.utt[i])]
+            if (self.config.use_crf):
+                pred = prob[i].cpu().tolist()
+                pred_tuple = []
+                idx_buff, tag_buff, pred_tags = [], [], []
+                pred = pred[:len(batch.utt[i])]
+            else:
+                pred = torch.argmax(prob[i], dim=-1).cpu().tolist()
+                pred_tuple = []
+                idx_buff, tag_buff, pred_tags = [], [], []
+                pred = pred[:len(batch.utt[i])]
             for idx, tid in enumerate(pred):
                 tag = label_vocab.convert_idx_to_tag(tid)
                 pred_tags.append(tag)
