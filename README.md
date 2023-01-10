@@ -34,6 +34,7 @@
 + MacBert: https://huggingface.co/hfl/chinese-macbert-base
 
 ### 推荐使用的工具库
+
 + transformers
   + 使用预训练语言模型的工具库: https://huggingface.co/
 + nltk
@@ -54,6 +55,8 @@
 -   登录：https://docs.hpc.sjtu.edu.cn/login/index.html
 -   作业提交：https://docs.hpc.sjtu.edu.cn/job/index.html
 -   pytorch：https://docs.hpc.sjtu.edu.cn/app/ai/pytorch.html
+-   VSCode Node: https://studio.hpc.sjtu.edu.cn/rnode/node012.pi.sjtu.edu.cn/16319/?folder=/dssg/home/acct-stu/stu763
+    -   主要在用的就是这个
 
 -   账号：stu763
 -   密码：c1cVPI1SfY3E

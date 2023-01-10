@@ -4,6 +4,10 @@ from utils.vocab import Vocab, LabelVocab
 from utils.word2vec import Word2vecUtils
 from utils.evaluator import Evaluator
 
+alphabet = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z',
+            'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z', ' ']
+
+
 class Example():
 
     @classmethod
@@ -27,8 +31,21 @@ class Example():
         super(Example, self).__init__()
         self.ex = ex
         self.did = did
-
         self.utt = ex['asr_1best']
+
+        idx = 0
+        while idx < len(self.utt):
+            if self.utt[idx] in alphabet:
+                self.utt = self.utt[0:idx] + self.utt[idx+1:]
+            else:
+                idx += 1
+
+        # self.utt = nlp(ex['asr_1best'])[0]
+        # print(ex['asr_1best'])
+        # print(ex['manual_transcript'])
+        # print(self.utt)
+        # print(self.utt)
+        
         self.slot = {}
         for label in ex['semantic']:
             act_slot = f'{label[0]}-{label[1]}'

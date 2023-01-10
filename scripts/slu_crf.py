@@ -10,8 +10,8 @@ from utils.initialization import *
 from utils.example import Example
 from utils.batch import from_example_list
 from utils.vocab import PAD
-from model.slu_baseline_tagging import SLUTagging
-import pdb
+from model.slu_baseline_tagging_crf import SLUTagging
+# from model.slu_bert import SLUTagging
 
 # initialization params, output path, logger, random seed and torch.device
 args = init_args(sys.argv[1:])
@@ -29,7 +29,6 @@ train_dataset = Example.load_dataset(train_path)
 dev_dataset = Example.load_dataset(dev_path)
 print("Load dataset and database finished, cost %.4fs ..." % (time.time() - start_time))
 print("Dataset size: train -> %d ; dev -> %d" % (len(train_dataset), len(dev_dataset)))
-pdb.set_trace()
 
 args.vocab_size = Example.word_vocab.vocab_size
 args.pad_idx = Example.word_vocab[PAD]
@@ -38,7 +37,7 @@ args.tag_pad_idx = Example.label_vocab.convert_tag_to_idx(PAD)
 
 
 model = SLUTagging(args).to(device)
-Example.word2vec.load_embeddings(model.word_embed, Example.word_vocab, device=device)
+# Example.word2vec.load_embeddings(model.word_embed, Example.word_vocab, device=device)
 
 if args.testing:
     check_point = torch.load(open('model.bin', 'rb'), map_location=device)
@@ -80,6 +79,7 @@ def decode(choice):
 def predict():
     model.eval()
     test_path = os.path.join(args.dataroot, 'test_unlabelled.json')
+    # test_path = os.path.join(args.dataroot, 'train.json')
     test_dataset = Example.load_dataset(test_path)
     predictions = {}
     with torch.no_grad():
@@ -126,6 +126,7 @@ if not args.testing:
         gc.collect()
 
         start_time = time.time()
+        # metrics, dev_loss = decode('train')
         metrics, dev_loss = decode('dev')
         dev_acc, dev_fscore = metrics['acc'], metrics['fscore']
         print('Evaluation: \tEpoch: %d\tTime: %.4f\tDev acc: %.2f\tDev fscore(p/r/f): (%.2f/%.2f/%.2f)' % (i, time.time() - start_time, dev_acc, dev_fscore['precision'], dev_fscore['recall'], dev_fscore['fscore']))
@@ -140,6 +141,7 @@ if not args.testing:
     print('FINAL BEST RESULT: \tEpoch: %d\tDev loss: %.4f\tDev acc: %.4f\tDev fscore(p/r/f): (%.4f/%.4f/%.4f)' % (best_result['iter'], best_result['dev_loss'], best_result['dev_acc'], best_result['dev_f1']['precision'], best_result['dev_f1']['recall'], best_result['dev_f1']['fscore']))
 else:
     start_time = time.time()
+    # metrics, dev_loss = decode('train')
     metrics, dev_loss = decode('dev')
     dev_acc, dev_fscore = metrics['acc'], metrics['fscore']
     predict()
