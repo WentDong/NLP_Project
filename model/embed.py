@@ -34,6 +34,7 @@ class Emb():
         self.use_elmo = config.use_elmo
         if not self.use_bert and not self.use_elmo:
             self.embed = nn.Embedding(config.vocab_size, config.embed_size, padding_idx=0)
+            self.embed = self.embed.to(config.device)
         else:
             if self.use_bert:
                 self.embed = TransformerEmbed(config)
