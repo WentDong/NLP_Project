@@ -24,7 +24,7 @@ class SLUTagging(nn.Module):
         elif config.use_lstm_decoder:
             self.index_slices = [2*i+1 for i in range(self.config.num_layer)]  # generated from the reversed path
             self.index_slices = torch.tensor(self.index_slices, dtype=torch.long, device=self.config.device)
-            self.output_layer = LSTM_Decoder(config.hidden_size, config.num_tags, config.tag_pad_idx, config.dropout, config.use_focus)
+            self.output_layer = LSTM_Decoder(config.hidden_size, config.num_tags, config.tag_pad_idx, config.dropout, config.use_focus, config.device)
         else:
             self.output_layer = TaggingFNNDecoder(config.hidden_size, config.num_tags, config.tag_pad_idx)
 
@@ -134,9 +134,10 @@ class TaggingFNNDecoder(nn.Module):
         return (prob, )
 
 class LSTM_Decoder(nn.Module):
-    def __init__(self, input_size, num_tags, pad_id, dropout, use_focus):
+    def __init__(self, input_size, num_tags, pad_id, dropout, use_focus, device):
         super(LSTM_Decoder, self).__init__()
         self.num_tags = num_tags
+        self.device = device
         self.output_layer = nn.Linear(input_size//2, num_tags)
         self.loss_fct = nn.CrossEntropyLoss(ignore_index=pad_id)
         self.use_focus = use_focus
@@ -156,7 +157,7 @@ class LSTM_Decoder(nn.Module):
                 decode_inputs = torch.cat((hiddens[:, i:i+1], sm_last_tag), 2)
                 tag_lstm_out, (dec_h_t, dec_c_t) = self.decoder(decode_inputs, (h_t, c_t))
                 logits[:, i:i+1] = self.output_layer(tag_lstm_out)
-                # logits = logits.to(self.device)
+                logits = logits.to(self.device)
                 last_tag = logits[:, i:i+1]
                 sm_last_tag = torch.softmax(last_tag, dim=-1)
                 h_t, c_t = dec_h_t, dec_c_t
