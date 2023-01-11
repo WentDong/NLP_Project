@@ -40,7 +40,8 @@ def add_argument_base(arg_parser):
     arg_parser.add_argument("--dict_dir_list", type = list, default = ["./data/lexicon/poi_name.txt", "./data/lexicon/ordinal_number.txt", "./data/lexicon/operation_verb.txt"], help = "direction of dicts. It works only when use dict")
     
     arg_parser.add_argument("--use_crf", default = False, action = "store_true", help = "whether use crf.")
-    arg_parser.add_argument("--use_focus", default = False, action = "store_true", help = "whether use LSTM-focus as decoder.")
+    arg_parser.add_argument("--use_lstm_decoder", default = False, action = "store_true", help = "whether to use LSTM as decoder.")
+    arg_parser.add_argument("--use_focus", default = False, action = "store_true", help = "whether to add focus mechanism in LSTM decoder")
 
     arg_parser.add_argument("--alpha_filter", default = False, action = "store_true", help = "whether filter out Englist letters in utts")
     arg_parser.add_argument("--rate_head", type = float, default = 0.88, help = "The rate for the head of a word")
