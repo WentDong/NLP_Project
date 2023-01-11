@@ -91,7 +91,7 @@ python scripts/slu_main.py
 
 -   集群状态查询：https://status.hpc.sjtu.edu.cn/
 
-###相关文档：
+### 相关文档：
 
 -   登录：https://docs.hpc.sjtu.edu.cn/login/index.html
 -   作业提交：https://docs.hpc.sjtu.edu.cn/job/index.html
