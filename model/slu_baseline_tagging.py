@@ -34,7 +34,7 @@ class SLUTagging(nn.Module):
             embed = self.embed(batch.utt, max_length)
         else:
             embed = self.embed(input_ids)
-        if (self.config.use_bert or self.alpha_filter):
+        if (self.config.use_bert or self.config.alpha_filter):
             try:
                 i = lengths.index(0)
                 embed = embed[0:i]
