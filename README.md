@@ -15,6 +15,16 @@ python scripts/slu_main.py
 
 ### 运行 Baseline (BiLSTM) 相关代码：
 
+-   使用BiLSTM-LSTM的encoder-decoder模型:
+	```bash
+	python scripts/slu_main.py  --use_lstm_decoder
+	```
+
+-   使用增加了Focus Mechanism的BiLSTM-LSTM模型:
+	```bash
+	python scripts/slu_main.py  --use_lstm_decoder --use_focus
+	```
+
 -   使用预训练模型 roberta:
 	```bash
 	python scripts/slu_main.py  --use_bert --alpha_filter
