@@ -17,6 +17,7 @@ def add_argument_base(arg_parser):
     arg_parser.add_argument('--seed', default=999, type=int, help='Random seed')
     arg_parser.add_argument('--device', type=int, default=-1, help='Use which device: -1 -> cpu ; the index of gpu o.w.')
     arg_parser.add_argument('--testing', action='store_true', help='training or evaluation mode')
+    arg_parser.add_argument('--model_name', default = "model.bin", type = str, help = 'the name of model saved or tested')
     #### Training Hyperparams ####
     arg_parser.add_argument('--batch_size', default=32, type=int, help='Batch size')
     arg_parser.add_argument('--lr', type=float, default=1e-3, help='learning rate')
@@ -30,20 +31,25 @@ def add_argument_base(arg_parser):
     #### Algorithm Choose
     arg_parser.add_argument("--algo", default = "Baseline", choices=['Baseline', 'Dual'], help = 'Algorithem to run')
     
+    #### Args For Bert
     arg_parser.add_argument("--use_bert", default = False, action = "store_true", help = "whether use bert")
-    # arg_parser.add_argument("--finetune_bert", default = False, action = "store_true", help = "whehter finetune bert. it only works when use bert.")
+    arg_parser.add_argument("--alpha_filter", default = False, action = "store_true", help = "whether filter out Englist letters in utts")
     arg_parser.add_argument("--pretrained_model_name", type = str, default = "hfl/chinese-roberta-wwm-ext", help = "which model to use")
     
+    #### Args For ELMo
     arg_parser.add_argument("--use_elmo", default = False, action = "store_true", help = "whether use ELMo")
     arg_parser.add_argument("--elmo_model", type = str, default = "./zhs.model/", help = "The path where the elmo model saved")
+
+    #### Args For Jieba's Extra Dictionary
     arg_parser.add_argument("--use_dict", default = False, action = "store_true", help = "whether use lexicon as supplements of dictionary with jieba")
     arg_parser.add_argument("--dict_dir_list", type = list, default = ["./data/lexicon/poi_name.txt", "./data/lexicon/ordinal_number.txt", "./data/lexicon/operation_verb.txt"], help = "direction of dicts. It works only when use dict")
     
+    #### Args For Extra components during classificaiton.
     arg_parser.add_argument("--use_crf", default = False, action = "store_true", help = "whether use crf.")
     arg_parser.add_argument("--use_lstm_decoder", default = False, action = "store_true", help = "whether to use LSTM as decoder.")
     arg_parser.add_argument("--use_focus", default = False, action = "store_true", help = "whether to add focus mechanism in LSTM decoder")
 
-    arg_parser.add_argument("--alpha_filter", default = False, action = "store_true", help = "whether filter out Englist letters in utts")
+    #### Hyperparms for Merging Features
     arg_parser.add_argument("--rate_head", type = float, default = 0.88, help = "The rate for the head of a word")
     arg_parser.add_argument("--rate_mid", type = float, default = 0.7, help = "The rate for the middle of a word")
 
