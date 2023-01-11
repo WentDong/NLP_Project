@@ -15,20 +15,34 @@ python scripts/slu_main.py
 
 ### 运行 Baseline (BiLSTM) 相关代码：
 
+#### Embedding Layer:
+
 -   使用预训练模型 roberta:
-	```bash
-	python scripts/slu_main.py  --use_bert --alpha_filter
-	```
-	
--   使用CRF:
-    ```bash
-	python scripts/slu_main.py  --use_crf
-	```
+  ```bash
+  python scripts/slu_main.py  --use_bert --alpha_filter
+  ```
 -   使用ELMo:
     ```bash
-	python scripts/slu_main.py  --use_elmo
-	```
--   可以同时使用预训练模型和 crf。
+    python scripts/slu_main.py  --use_elmo
+    ```
+
+#### Output Layer:
+
+-   使用CRF:
+    ```bash
+    python scripts/slu_main.py  --use_crf
+    ```
+-  使用LSTM:
+	```bash
+    python scripts/slu_main.py  --use_lstm_decoder
+  ```
+-  使用focus
+	```bash
+    python scripts/slu_main.py  --use_focus
+  ```
+  
+#### 注意
+-   可以同时使用任意一种 Embedding Layer 和 Output Layer 。
 -   可以通过将软件包中：`elmoformanylangs/elmo.py` 中第95、96行注释减少ELMo无意义的info输出
 
 ### 运行Dual BiLSTM 相关代码：
@@ -36,8 +50,10 @@ python scripts/slu_main.py
 ```bash
  python scripts/slu_main.py  --algo Dual --rate_head 0.8 --rate_mid 0.6 --use_dict 
 ```
+-   Embedding Layer 选择ELMo, 因为其提供了词向量的提取。
+-   可以运行任意一种Output Layer。
+    -   LSTM Decoder 仅继承字级别的BiLSTM状态
 
--   可以同时运行crf。
 
 ### 测试
 

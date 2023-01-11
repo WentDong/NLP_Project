@@ -43,6 +43,9 @@ args.tag_pad_idx = Example.label_vocab.convert_tag_to_idx(PAD)
 if args.use_elmo or args.algo=="Dual":
     args.embed_size = 1024
 
+if args.algo == "Dual":
+    args.use_elmo = True
+
 model = SLUTagging(args).to(device)
 if not args.use_bert and not args.use_elmo and args.algo == "Baseline":
     Example.word2vec.load_embeddings(model.embed.embed, Example.word_vocab, device=device)
