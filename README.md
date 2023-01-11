@@ -29,18 +29,21 @@ python scripts/slu_main.py
 #### Output Layer:
 
 -   使用CRF:
+  ```bash
+  python scripts/slu_main.py  --use_crf
+  ```
+
+-   使用BiLSTM-LSTM的encoder-decoder模型:
+
     ```bash
-    python scripts/slu_main.py  --use_crf
-    ```
--  使用LSTM:
-	```bash
     python scripts/slu_main.py  --use_lstm_decoder
+    ```
+
+-   使用增加了Focus Mechanism的BiLSTM-LSTM模型:
+  ```bash
+  python scripts/slu_main.py  --use_lstm_decoder --use_focus
   ```
--  使用focus
-	```bash
-    python scripts/slu_main.py  --use_focus
-  ```
-  
+
 #### 注意
 -   可以同时使用任意一种 Embedding Layer 和 Output Layer 。
 -   可以通过将软件包中：`elmoformanylangs/elmo.py` 中第95、96行注释减少ELMo无意义的info输出
@@ -107,7 +110,7 @@ python scripts/slu_main.py
 
 -   集群状态查询：https://status.hpc.sjtu.edu.cn/
 
-### 相关文档：
+###  相关文档：
 
 -   登录：https://docs.hpc.sjtu.edu.cn/login/index.html
 -   作业提交：https://docs.hpc.sjtu.edu.cn/job/index.html
