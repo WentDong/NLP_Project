@@ -50,6 +50,7 @@ def add_argument_base(arg_parser):
     arg_parser.add_argument("--use_focus", default = False, action = "store_true", help = "whether to add focus mechanism in LSTM decoder")
 
     #### Hyperparms for Merging Features
+    arg_parser.add_argument("--Merge_Method", default = "manual", choices = ["manual", "Adapter"])
     arg_parser.add_argument("--rate_head", type = float, default = 0.88, help = "The rate for the head of a word")
     arg_parser.add_argument("--rate_mid", type = float, default = 0.7, help = "The rate for the middle of a word")
 

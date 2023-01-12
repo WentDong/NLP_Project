@@ -50,9 +50,16 @@ python scripts/slu_main.py
 
 ### 运行Dual BiLSTM 相关代码：
 
+-   手动融合：
+
 ```bash
  python scripts/slu_main.py  --algo Dual --rate_head 0.8 --rate_mid 0.6 --use_dict 
 ```
+-   自动融合 By (Word Adaper):
+```bash
+ python scripts/slu_main.py  --algo Dual --Merge_Method Adapter
+```
+
 -   Embedding Layer 选择ELMo, 因为其提供了词向量的提取。
 -   可以运行任意一种Output Layer。
     -   LSTM Decoder 仅继承字级别的BiLSTM状态
@@ -115,8 +122,5 @@ python scripts/slu_main.py
 -   登录：https://docs.hpc.sjtu.edu.cn/login/index.html
 -   作业提交：https://docs.hpc.sjtu.edu.cn/job/index.html
 -   pytorch：https://docs.hpc.sjtu.edu.cn/app/ai/pytorch.html
--   VSCode Node: https://studio.hpc.sjtu.edu.cn/rnode/node012.pi.sjtu.edu.cn/16319/?folder=/dssg/home/acct-stu/stu763
-    -   主要在用的就是这个
-
 -   账号：stu763
 -   密码：c1cVPI1SfY3E

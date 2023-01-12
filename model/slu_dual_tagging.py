@@ -2,7 +2,6 @@
 import torch
 import torch.nn as nn
 import torch.nn.utils.rnn as rnn_utils
-# from model.Word_Adaper import Word_Adapter
 import jieba
 
 from model.embed import ELMoEmb
@@ -12,10 +11,17 @@ def Feat_Merge(out_word, Batch_splits, out_char, device, rate_head = 0.88, rate_
     for i,split in enumerate(Batch_splits):
         s = 0
         for j,len in enumerate(split):
-            # feat_B[i][s:s+len] = out_feat[i][j].unsqueeze(0).repeat((len,1))
             feat_B[i][s] = out_word[i][j].unsqueeze(0)*rate_head + out_char[i][s].unsqueeze(0) * (1-rate_head)
             if (len>1):
                 feat_B[i][s+1:s+len] = out_word[i][j].unsqueeze(0).repeat((len-1,1))*rate_mid + out_char[i][s+1:s+len].unsqueeze(0)*(1-rate_mid)
+            s += len
+    return feat_B
+def Feat_Repeat (out_word, Batch_splits, shape):
+    feat_B = torch.zeros(shape)
+    for i,split in enumerate(Batch_splits):
+        s = 0
+        for j,len in enumerate(split):
+            feat_B[i][s:s+len] = out_word[i][j].unsqueeze(0).repeat((len,1))
             s += len
     return feat_B
 
@@ -29,7 +35,9 @@ class SLUTagging(nn.Module):
         
         self.rnn_char = getattr(nn, self.cell)(config.embed_size, config.hidden_size // 2, num_layers=config.num_layer, bidirectional=True, batch_first=True)
         self.rnn_word = getattr(nn, self.cell)(config.embed_size, config.hidden_size // 2, num_layers=config.num_layer, bidirectional=True, batch_first=True)
-        # self.adapter = Word_Adapter(input_dim=config.hidden_size) Don't Work!
+        if config.Merge_Method == "Adapter":
+            from model.Word_Adaper import Word_Adapter
+            self.adapter = Word_Adapter(input_dim=config.hidden_size) 
         self.dropout_layer = nn.Dropout(p=config.dropout)
         
         if config.use_dict:
@@ -80,9 +88,11 @@ class SLUTagging(nn.Module):
         rnn_out_char, _ = rnn_utils.pad_packed_sequence(packed_rnn_outs_char, batch_first=True)
         rnn_out_word, _ = rnn_utils.pad_packed_sequence(packed_rnn_outs_word, batch_first=True)
 
-        rnn_out = Feat_Merge(rnn_out_word, Batch_split, rnn_out_char, self.config.device, self.config.rate_head, self.config.rate_mid)
-        
-        # rnn_out = self.adapter(rnn_out_char, rnn_out_word_repeat) # Not Work
+        if (self.config.Merge_Method == "manual"):
+            rnn_out = Feat_Merge(rnn_out_word, Batch_split, rnn_out_char, self.config.device, self.config.rate_head, self.config.rate_mid)
+        else:
+            rnn_out_word_repeat = Feat_Repeat(rnn_out_word, Batch_split, rnn_out_char.shape).to(self.config.device)
+            rnn_out = self.adapter(rnn_out_char, rnn_out_word_repeat) # Not Work
         
         hiddens = self.dropout_layer(rnn_out)
 
