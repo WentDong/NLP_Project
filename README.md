@@ -81,15 +81,14 @@ python scripts/slu_main.py
 -   可以运行任意一种Output Layer。
     -   LSTM Decoder 仅继承字级别的BiLSTM状态
 
-
-### 测试
+### 测试与预测
 
 ```bash
  python scripts/slu_main.py --testing --<arg> <value>
 ```
 
 -   注意： 测试模型需要添加训练中对应的args！
-
+-   预测结果将被存放于 `args.dataroot/prediction.json`中。
 
 ### 代码说明
 
@@ -119,53 +118,13 @@ python scripts/slu_main.py
 
 + `model/embed.py`: Embedding Layer
 
++ `model/Decode.py`不同Output Layer对应的不同Decoder以及Decode过程中需要的函数。
 
 
 
+### 使用的预训练语言模型
 
+-   Roberta-WWM: https://huggingface.co/hfl/chinese-roberta-wwm-ext
 
+-   ELMo: [simplified-Chinese](http://39.96.43.154/zhs.model.tar.bz2)
 
-
-
-
-
-
-
-
-
-
-
-后面明天删掉。
-
-### 有关预训练语言模型
-
-本次代码中没有加入有关预训练语言模型的代码，如需使用预训练语言模型我们推荐使用下面几个预训练模型，若使用预训练语言模型，不要使用large级别的模型
-+ Bert: https://huggingface.co/bert-base-chinese
-+ Bert-WWM: https://huggingface.co/hfl/chinese-bert-wwm-ext
-+ Roberta-WWM: https://huggingface.co/hfl/chinese-roberta-wwm-ext
-+ MacBert: https://huggingface.co/hfl/chinese-macbert-base
-
-### 推荐使用的工具库
-
-+ transformers
-  + 使用预训练语言模型的工具库: https://huggingface.co/
-+ nltk
-  + 强力的NLP工具库: https://www.nltk.org/
-+ stanza
-  + 强力的NLP工具库: https://stanfordnlp.github.io/stanza/
-+ jieba
-  + 中文分词工具: https://github.com/fxsjy/jieba
-
-## 服务器使用
-
-为避免计算资源浪费，教学账号限制作业运行数量1个、核数10个、GPU卡数1卡、最长运行时间24小时。请务必提醒学生不要在登录节点运行作业，否则将会被封禁。教学支撑gpu队列为dgx2（单卡拥有32G显存）。目前集群GPU资源紧张，可能会出现排队的现象，请学生妥善安排作业提交时间。
-
--   集群状态查询：https://status.hpc.sjtu.edu.cn/
-
-###  相关文档：
-
--   登录：https://docs.hpc.sjtu.edu.cn/login/index.html
--   作业提交：https://docs.hpc.sjtu.edu.cn/job/index.html
--   pytorch：https://docs.hpc.sjtu.edu.cn/app/ai/pytorch.html
--   账号：stu763
--   密码：c1cVPI1SfY3E
