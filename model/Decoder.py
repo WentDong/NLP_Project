@@ -7,35 +7,38 @@ def decode(model, label_vocab, batch, config):
     prob = output[0]
     predictions = []
     for i in range(batch_size):
-        if (config.use_crf):
-            pred = prob[i].cpu().tolist()
-            pred_tuple = []
-            idx_buff, tag_buff, pred_tags = [], [], []
-            pred = pred[:len(batch.utt[i])]
-        else:
-            pred = torch.argmax(prob[i], dim=-1).cpu().tolist()
-            pred_tuple = []
-            idx_buff, tag_buff, pred_tags = [], [], []
-            pred = pred[:len(batch.utt[i])]
-        for idx, tid in enumerate(pred):
-            tag = label_vocab.convert_idx_to_tag(tid)
-            pred_tags.append(tag)
-            if (tag == 'O' or tag.startswith('B')) and len(tag_buff) > 0:
-                slot = '-'.join(tag_buff[0].split('-')[1:])
-                value = ''.join([batch.utt[i][j] for j in idx_buff])
-                idx_buff, tag_buff = [], []
-                pred_tuple.append(f'{slot}-{value}')
-                if tag.startswith('B'):
+        if i < len(prob):
+            if (config.use_crf):
+                pred = prob[i].cpu().tolist()
+                pred_tuple = []
+                idx_buff, tag_buff, pred_tags = [], [], []
+                pred = pred[:len(batch.utt[i])]
+            else:
+                pred = torch.argmax(prob[i], dim=-1).cpu().tolist()
+                pred_tuple = []
+                idx_buff, tag_buff, pred_tags = [], [], []
+                pred = pred[:len(batch.utt[i])]
+            for idx, tid in enumerate(pred):
+                tag = label_vocab.convert_idx_to_tag(tid)
+                pred_tags.append(tag)
+                if (tag == 'O' or tag.startswith('B')) and len(tag_buff) > 0:
+                    slot = '-'.join(tag_buff[0].split('-')[1:])
+                    value = ''.join([batch.utt[i][j] for j in idx_buff])
+                    idx_buff, tag_buff = [], []
+                    pred_tuple.append(f'{slot}-{value}')
+                    if tag.startswith('B'):
+                        idx_buff.append(idx)
+                        tag_buff.append(tag)
+                elif tag.startswith('I') or tag.startswith('B'):
                     idx_buff.append(idx)
                     tag_buff.append(tag)
-            elif tag.startswith('I') or tag.startswith('B'):
-                idx_buff.append(idx)
-                tag_buff.append(tag)
-        if len(tag_buff) > 0:
-            slot = '-'.join(tag_buff[0].split('-')[1:])
-            value = ''.join([batch.utt[i][j] for j in idx_buff])
-            pred_tuple.append(f'{slot}-{value}')
-        predictions.append(pred_tuple)
+            if len(tag_buff) > 0:
+                slot = '-'.join(tag_buff[0].split('-')[1:])
+                value = ''.join([batch.utt[i][j] for j in idx_buff])
+                pred_tuple.append(f'{slot}-{value}')
+            predictions.append(pred_tuple)
+        else:
+            predictions.append([])
     if len(output) == 1:
         return predictions
     else:

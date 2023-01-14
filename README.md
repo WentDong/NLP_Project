@@ -1,9 +1,25 @@
+# CS3602 自然语言处理 2022秋季学期 口语语义解析大作业
+
 ### 创建环境
 
-    conda create -n slu python=3.6
-    source activate slu
-    pip install torch==1.7.1
-    ...
+```bash
+conda create -n slu python=3.6
+source activate slu
+pip install torch==1.9.1
+pip install jieba==0.42.1
+pip install transformers==4.5.1
+pip install overrides==3.1.0
+pip install elmoformanylangs==0.0.4.post2
+
+```
+
+根据 [ELMo代码仓库](https://github.com/HIT-SCIR/ELMoForManyLangs)指引，下载[简体中文模型](http://39.96.43.154/zhs.model.tar.bz2)，（亦可以直接使用此链接）后续根据`utils/args.py`中 `elmo_model`将`zhs.model`文件夹地址作为参数传入使用。
+
+您亦可尝试以下指令安装所需环境。
+
+```bash
+pip install -r requirements.txt
+```
 
 ### 运行
 
@@ -18,12 +34,13 @@ python scripts/slu_main.py
 #### Embedding Layer:
 
 -   使用预训练模型 roberta:
-  ```bash
-  python scripts/slu_main.py  --use_bert --alpha_filter
-  ```
+      ```bash
+      python scripts/slu_main.py  --use_bert --alpha_filter
+      ```
 -   使用ELMo:
+
     ```bash
-    python scripts/slu_main.py  --use_elmo
+    python scripts/slu_main.py  --use_elmo 
     ```
 
 #### Output Layer:
@@ -52,13 +69,13 @@ python scripts/slu_main.py
 
 -   手动融合：
 
-```bash
- python scripts/slu_main.py  --algo Dual --rate_head 0.8 --rate_mid 0.6 --use_dict 
-```
+    ```bash
+     python scripts/slu_main.py  --algo Dual --rate_head 0.8 --rate_mid 0.6 --use_dict 
+    ```
 -   自动融合 By (Word Adaper):
-```bash
- python scripts/slu_main.py  --algo Dual --Merge_Method Adapter
-```
+    ```bash
+     python scripts/slu_main.py  --algo Dual --Merge_Method Adapter --use_dict
+    ```
 
 -   Embedding Layer 选择ELMo, 因为其提供了词向量的提取。
 -   可以运行任意一种Output Layer。
@@ -72,25 +89,53 @@ python scripts/slu_main.py
 ```
 
 -   注意： 测试模型需要添加训练中对应的args！
--   
+
 
 ### 代码说明
 
 + `utils/args.py`:定义了所有涉及到的可选参数，如需改动某一参数可以在运行的时候将命令修改成
-        
   
     ```bash
     python scripts/slu_baseline.py --<arg> <value>
     ```
     
     其中，`<arg>`为要修改的参数名，`<value>`为修改后的值
+    
 + `utils/initialization.py`:初始化系统设置，包括设置随机种子和显卡/CPU
+
 + `utils/vocab.py`:构建编码输入输出的词表
+
 + `utils/word2vec.py`:读取词向量
+
 + `utils/example.py`:读取数据
+
 + `utils/batch.py`:将数据以批为单位转化为输入
-+ `model/slu_baseline_tagging.py`:baseline模型
-+ `scripts/slu_baseline.py`:主程序脚本
+
++ `model/slu_baseline_tagging.py`:Baseline模型
+
++ `scripts/slu_main.py`:主程序脚本
+
++ `model/slu_dual_tagging.py`：Dual 模型
+
++ `model/embed.py`: Embedding Layer
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+后面明天删掉。
 
 ### 有关预训练语言模型
 
