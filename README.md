@@ -95,7 +95,7 @@ python scripts/slu_main.py
 + `utils/args.py`:定义了所有涉及到的可选参数，如需改动某一参数可以在运行的时候将命令修改成
   
     ```bash
-    python scripts/slu_baseline.py --<arg> <value>
+    python scripts/slu_main.py --<arg> <value>
     ```
     
     其中，`<arg>`为要修改的参数名，`<value>`为修改后的值
